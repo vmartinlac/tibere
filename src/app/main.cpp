@@ -1,80 +1,28 @@
-#include <memory>
-#include <map>
-#include <vector>
+#include "Engine.h"
 
-class Message
+struct RadarSignal
 {
-public:
-
-};
-
-class MetaMessage
-{
-public:
-
-    std::shared_ptr<Message> createMessage();
-};
-
-class ContinuousMessage
-{
-public:
-
-    int getNumDimensions() const;
-    std::string getDimensionName(int i) const;
-    const std::vector<double>& getData() const;
-    std::vector<double>& getData();
-
-protected:
-
-    std::vector<double> myData;
-};
-
-class DiscreteMessage
-{
-public:
-
-
-protected:
-};
-
-class System
-{
-public:
-
-    virtual int getNumInputPorts() = 0;
-    virtual std::string getInputPortName(int i) = 0;
-    virtual std::string getInputPortType(int i) = 0;
-
-    virtual int getNumOutputPorts() = 0;
-    virtual std::string getOutputPortName(int i) = 0;
-    virtual std::string getOutputPortType(int i) = 0;
-};
-
-class ComposedSystem : public System
-{
-public:
-
-protected:
-
-};
-
-class Engine
-{
-public:
-
-    using MetaMessageMap = std::map<std::string, std::shared_ptr<MetaMessage> >;
-    using SystemMap = std::map<std::string, std::shared_ptr<System> >;
-
-public:
-
-    void run(const MetaMessageMap& meta_messages, const SystemMap& systems);
-
-protected:
-
+    std::vector<double> data;
 };
 
 int main(int num_args, char** args)
 {
+    Engine engine;
+
+    MessagePtr SE3Message(new ContinuousMessage({"object_to_world_x", "object_to_world_y", "object_to_world_z", "object_to_world_qx", "object_to_world_qy", "object_to_world_qz", "object_to_world_qw"}));
+
+    MessagePtr Sim2Message(new ContinuousMessage({"object_to_world_x", "object_to_world_y", "scale", "theta"}));
+
+    MessagePtr RadarMessage(new DiscreteMessage<RadarSignal>());
+
+    engine.registerMessage("SE3", SE3Message);
+    engine.registerMessage("Sim2", Sim2Message);
+    engine.registerMessage("RadarSignal", RadarMessage);
+
+    engine.run();
+    DiscreteMessageStoragePtr storage = RadarMessage->asDiscrete()->createStorage();
+    storage->as<RadarSignal>()->data;
+
     return 0;
 }
 
