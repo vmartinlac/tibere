@@ -1,8 +1,10 @@
 
 #pragma once
 
+#include <tuple>
 #include <memory>
 #include <string>
+#include "DiscreteStorage.h"
 
 class System
 {
@@ -17,20 +19,31 @@ public:
     virtual int getNumOutputPorts() = 0;
     virtual std::string getOutputPortName(int i) = 0;
     virtual std::string getOutputPortType(int i) = 0;
+
+    virtual bool hasContinuousState() = 0;
+    virtual bool hasDiscreteState() = 0;
+
+    virtual int getNumDimensionsOfContinuousState() = 0;
+    virtual void computeContinuousStateDerivative(
+        DiscreteStoragePtr discrete_state,
+        double* continuous_state,
+        double** continuous_inputs) = 0;
+
+    virtual DiscreteStoragePtr createDiscreteStateStorage() = 0;
+    virtual std::tuple<bool,double> getDiscreteStateDuration(DiscreteStoragePtr discrete_state) = 0;
+    /*
+    virtual void handleExternalEvent();
+    virtual void handleTimeOut();
+    */
+
+    virtual int getNumParameters() = 0;
+    virtual std::string getParameterName(int i) = 0;
+    virtual int getParameterType(int i) = 0;
 };
 
 using SystemPtr = std::shared_ptr<System>;
 
-class ContinuousSystem : public System
-{
-public:
-
-    virtual int getNumStateDimensions() = 0;
-    virtual void getDerivative(const double** inputs, const double* state, double* derivative) = 0;
-    virtual void getOutputs(const double* state, double** outputs) = 0;
-};
-
-class DiscreteSystem : public System
+class ComposedSystem : public System
 {
 public:
 };

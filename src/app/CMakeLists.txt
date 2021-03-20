@@ -3,8 +3,10 @@ add_executable(
     tibere_app
     System.h
     System.cpp
-    Message.h
-    Message.cpp
+    DiscreteStorage.h
+    DiscreteStorage.cpp
+    MetaMessage.h
+    MetaMessage.cpp
     Engine.h
     Engine.cpp
     main.cpp)

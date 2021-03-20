@@ -3,24 +3,29 @@
 struct RadarSignal
 {
     std::vector<double> data;
+
+    std::string toString()
+    {
+        return "";
+    }
 };
 
 int main(int num_args, char** args)
 {
     Engine engine;
 
-    MessagePtr SE3Message(new ContinuousMessage({"object_to_world_x", "object_to_world_y", "object_to_world_z", "object_to_world_qx", "object_to_world_qy", "object_to_world_qz", "object_to_world_qw"}));
+    MetaMessagePtr SE3MetaMessage(new ContinuousMetaMessage(7));
 
-    MessagePtr Sim2Message(new ContinuousMessage({"object_to_world_x", "object_to_world_y", "scale", "theta"}));
+    MetaMessagePtr Sim2MetaMessage(new ContinuousMetaMessage(4));
 
-    MessagePtr RadarMessage(new DiscreteMessage<RadarSignal>());
+    MetaMessagePtr RadarMetaMessage(new DiscreteMetaMessage<RadarSignal>());
 
-    engine.registerMessage("SE3", SE3Message);
-    engine.registerMessage("Sim2", Sim2Message);
-    engine.registerMessage("RadarSignal", RadarMessage);
+    engine.registerMetaMessage("SE3", SE3MetaMessage);
+    engine.registerMetaMessage("Sim2", Sim2MetaMessage);
+    engine.registerMetaMessage("RadarSignal", RadarMetaMessage);
 
     engine.run();
-    DiscreteMessageStoragePtr storage = RadarMessage->asDiscrete()->createStorage();
+    DiscreteStoragePtr storage = RadarMetaMessage->asDiscrete()->createStorage();
     storage->as<RadarSignal>()->data;
 
     return 0;
