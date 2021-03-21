@@ -7,8 +7,6 @@ add_executable(
     DiscreteStorage.cpp
     MetaMessage.h
     MetaMessage.cpp
-    Engine.h
-    Engine.cpp
     main.cpp)
 
 target_link_libraries(tibere_app PUBLIC Qt5::Core)

@@ -1,33 +1,6 @@
-#include "Engine.h"
-
-struct RadarSignal
-{
-    std::vector<double> data;
-
-    std::string toString()
-    {
-        return "";
-    }
-};
 
 int main(int num_args, char** args)
 {
-    Engine engine;
-
-    MetaMessagePtr SE3MetaMessage(new ContinuousMetaMessage(7));
-
-    MetaMessagePtr Sim2MetaMessage(new ContinuousMetaMessage(4));
-
-    MetaMessagePtr RadarMetaMessage(new DiscreteMetaMessage<RadarSignal>());
-
-    engine.registerMetaMessage("SE3", SE3MetaMessage);
-    engine.registerMetaMessage("Sim2", Sim2MetaMessage);
-    engine.registerMetaMessage("RadarSignal", RadarMetaMessage);
-
-    engine.run();
-    DiscreteStoragePtr storage = RadarMetaMessage->asDiscrete()->createStorage();
-    storage->as<RadarSignal>()->data;
-
     return 0;
 }
 
