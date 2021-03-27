@@ -1,6 +1,7 @@
 
 #pragma once
 
+#include <exception>
 #include <memory>
 
 class DiscreteStorage
@@ -42,7 +43,8 @@ T* DiscreteStorage::as()
 
     if(impl == nullptr)
     {
-        return nullptr;
+        //return nullptr;
+        throw std::bad_cast{};
     }
     else
     {

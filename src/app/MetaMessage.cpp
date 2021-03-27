@@ -1,13 +1,26 @@
 #include "MetaMessage.h"
 
-ContinuousMetaMessage::ContinuousMetaMessage(const std::string& name, int num_dimensions)
+bool DiscreteMetaMessage::operator==(const MetaMessage& other) const
 {
-    myNumDimensions = num_dimensions;
-    myName = name;
+    if(other.isDiscrete())
+    {
+        return getName() == other.getName() && typeid(*this).hash_code() == typeid(other).hash_code();
+    }
+    else
+    {
+        return false;
+    }
 }
 
-int ContinuousMetaMessage::getNumDimensions() const
+bool ContinuousMetaMessage::operator==(const MetaMessage& other) const
 {
-    return myNumDimensions;
+    if(other.isContinuous())
+    {
+        return getName() == other.getName() && myNumDimensions == other.asContinuous()->myNumDimensions;
+    }
+    else
+    {
+        return false;
+    }
 }
 

@@ -6,77 +6,91 @@
 #include <string>
 #include "DiscreteStorage.h"
 
-class ContinuousMetaMessageBase;
-class DiscreteMetaMessageBase;
+class ContinuousMetaMessage;
+class DiscreteMetaMessage;
 
 class MetaMessage
 {
 public:
 
+    MetaMessage(const std::string& name) : myName(name)
+    {
+    }
+
     virtual ~MetaMessage() = default;
 
-    virtual std::string getName() = 0;
+    std::string getName() const { return myName; }
 
-    bool isContinuous() { return asContinuous() != nullptr; }
-    bool isDiscrete() { return asDiscrete() != nullptr; }
+    bool isContinuous() const { return asContinuous() != nullptr; }
+    bool isDiscrete() const { return asDiscrete() != nullptr; }
 
-    virtual ContinuousMetaMessageBase* asContinuous() = 0;
-    virtual DiscreteMetaMessageBase* asDiscrete() = 0;
+    virtual ContinuousMetaMessage* asContinuous() = 0;
+    virtual DiscreteMetaMessage* asDiscrete() = 0;
+
+    virtual const ContinuousMetaMessage* asContinuous() const = 0;
+    virtual const DiscreteMetaMessage* asDiscrete() const = 0;
+
+    virtual bool operator==(const MetaMessage& other) const = 0;
+
+private:
+
+    std::string myName;
 };
 
 using MetaMessagePtr = std::shared_ptr<MetaMessage>;
 
-class DiscreteMetaMessageBase : public MetaMessage
+class DiscreteMetaMessage : public MetaMessage
 {
 public:
 
-    ContinuousMetaMessageBase* asContinuous() override { return nullptr; }
-    DiscreteMetaMessageBase* asDiscrete() override { return this; }
+    DiscreteMetaMessage(const std::string& name) : MetaMessage(name)
+    {
+    }
+
+    ContinuousMetaMessage* asContinuous() override { return nullptr; }
+    DiscreteMetaMessage* asDiscrete() override { return this; }
+    const ContinuousMetaMessage* asContinuous() const override { return nullptr; }
+    const DiscreteMetaMessage* asDiscrete() const override { return this; }
 
     virtual DiscreteStoragePtr createStorage() = 0;
+
+    bool operator==(const MetaMessage& other) const override;
 };
 
 template<typename T>
-class DiscreteMetaMessage : public DiscreteMetaMessageBase
+class DiscreteMetaMessageImpl : public DiscreteMetaMessage
 {
 public:
 
-    DiscreteMetaMessage(const std::string& name)
+    DiscreteMetaMessageImpl(const std::string& name) : DiscreteMetaMessage(name)
     {
-        myName = name;
     }
 
     DiscreteStoragePtr createStorage() override
     {
         return DiscreteStoragePtr(new DiscreteStorageImpl<T>());
     }
-
-protected:
-
-    std::string myName;
 };
 
-class ContinuousMetaMessageBase : public MetaMessage
+class ContinuousMetaMessage : public MetaMessage
 {
 public:
 
-    ContinuousMetaMessageBase* asContinuous() override { return this; }
-    DiscreteMetaMessageBase* asDiscrete() override { return nullptr; }
+    ContinuousMetaMessage(const std::string& name, int num_dimensions) : MetaMessage(name), myNumDimensions(num_dimensions)
+    {
+    }
 
-    virtual int getNumDimensions() const = 0;
-};
+    ContinuousMetaMessage* asContinuous() override { return this; }
+    DiscreteMetaMessage* asDiscrete() override { return nullptr; }
+    const ContinuousMetaMessage* asContinuous() const override { return this; }
+    const DiscreteMetaMessage* asDiscrete() const override { return nullptr; }
 
-class ContinuousMetaMessage : public ContinuousMetaMessageBase
-{
-public:
+    int getNumDimensions() const { return myNumDimensions; }
 
-    ContinuousMetaMessage(const std::string& name, int num_dimensions);
-    int getNumDimensions() const override;
-    std::string getName() override { return myName; }
+    bool operator==(const MetaMessage& other) const override;
 
-protected:
+private:
 
-    std::string myName;
     int myNumDimensions;
 };
 

@@ -1,6 +1,8 @@
 
 add_executable(
     tibere_app
+    Simulator.h
+    Simulator.cpp
     System.h
     System.cpp
     DiscreteStorage.h
