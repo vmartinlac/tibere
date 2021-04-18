@@ -1,6 +1,8 @@
 
 #pragma once
 
+#include <set>
+#include <map>
 #include <algorithm>
 #include <vector>
 #include <tuple>
@@ -58,9 +60,11 @@ public:
     virtual std::tuple<bool,double> getDiscreteStateDuration(DiscreteStoragePtr discrete_state) = 0;
 
     virtual void handleExternalEvent(
-        double** continous_inputs,
         double* continuous_state,
-        DiscreteStoragePtr discrete_state) = 0;
+        DiscreteStoragePtr discrete_state,
+        double** continous_inputs,
+        int port,
+        DiscreteStoragePtr message) = 0;
 
     virtual void handleTimeOut(
         double** continous_inputs,
@@ -175,6 +179,24 @@ public:
             }
         }
 
+        s.continuous_state_offset.resize(mySystems.size());
+
+        {
+            int i = 0;
+            int offset = 0;
+            for(SystemPtr& x : mySystems)
+            {
+                s.continuous_state_offset[i] = offset;
+
+                if(x->hasContinuousState())
+                {
+                    offset += x->getNumDimensionsOfContinuousState();
+                }
+
+                i++;
+            }
+        }
+
         return DiscreteStoragePtr(ret);
     }
 
@@ -196,20 +218,23 @@ public:
 
     std::tuple<bool,double> getDiscreteStateDuration(DiscreteStoragePtr discrete_state) override
     {
-        std::tuple<bool,double> ret;
+        std::tuple<bool,double> ret(false, 0.0);
         State& s = *discrete_state->as<State>();
 
         int i = 0;
+
         for(SystemPtr& x : mySystems)
         {
             if(x->hasDiscreteState())
             {
                 std::tuple<bool,double> tmp = x->getDiscreteStateDuration(s.states[i]);
-                if(std::get<0>(tmp))
+
+                if(std::get<0>(tmp) && (!std::get<0>(ret) || std::get<1>(tmp) < std::get<1>(ret)))
                 {
                     std::get<0>(ret) = true;
-                    std::get<1>(ret) = std::min(std::get<1>(ret), std::get<1>(tmp));
+                    std::get<1>(ret) = std::get<1>(tmp);
                 }
+
                 i++;
             }
         }
@@ -217,12 +242,32 @@ public:
         return ret;
     }
 
-    /*
-    virtual void handleExternalEvent(
-        double** continous_inputs,
+    void handleExternalEvent(
         double* continuous_state,
-        DiscreteStoragePtr discrete_state);
+        DiscreteStoragePtr discrete_state,
+        double** continous_inputs,
+        int port,
+        DiscreteStoragePtr message)
+    {
+        State& s = *discrete_state->as<State>();
+        auto it = myInputConnections.lower_bound(port);
 
+        while(it != myInputConnections.upper_bound(port))
+        {
+            const int system_id = std::get<0>(it->second);
+            /*
+            mySystems[system_id]->handleExternalEvent(
+                continuous_state + s.continuous_state_offset[system_id],
+                s.states[system_id],
+                ,
+                ,
+                message);
+            */
+            // TODO
+        }
+    }
+
+    /*
     virtual void handleTimeOut(
         double** continous_inputs,
         double* continuous_state,
@@ -231,11 +276,25 @@ public:
         DiscreteStoragePtr& message);
     */
 
+    void check()
+    {
+        // check that system name is unique.
+        {
+            std::set<std::string> items;
+            for(SystemPtr& x : mySystems)
+            {
+                if(items.find(x->getName()) != items.end()) throw std::runtime_error("internal error");
+                items.insert(x->getName());
+            }
+        }
+    }
+
 public:
 
     struct State
     {
         std::vector<DiscreteStoragePtr> states;
+        std::vector<int> continuous_state_offset;
     };
 
 public:
@@ -244,8 +303,8 @@ public:
     std::vector< SystemPtr > mySystems;
     std::vector< std::tuple<std::string, std::string> > myInputs;
     std::vector< std::tuple<std::string, std::string> > myOutputs;
-    std::vector< std::tuple<int,int,int,int> > myInternalConnections;
-    std::vector< std::tuple<int,int,int> > myInputConnections;
-    std::vector< std::tuple<int,int,int> > myOutputConnections;
+    std::multimap<int, std::tuple<int,int> > myInputConnections;
+    std::multimap<int, std::tuple<int,int> > myOutputConnections;
+    std::multimap< std::tuple<int,int>, std::tuple<int,int> > myInternalConnections;
 };
 

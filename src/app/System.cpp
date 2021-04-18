@@ -1,4 +1,4 @@
 #include "System.h"
 
-//static ComposedSystem s;
+static ComposedSystem s;
 
